@@ -39,7 +39,7 @@ export class CreateUserDTO {
   @ApiProperty()
   password: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: AppRole })
   role: AppRole;
 }
 
