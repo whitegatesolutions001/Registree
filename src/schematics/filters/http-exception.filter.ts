@@ -1,5 +1,3 @@
-/* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   ExceptionFilter,
   Catch,
@@ -16,19 +14,28 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = context.getResponse<Response>();
     const request = context.getRequest<Request>();
 
-    const { message, name } = exception;
     const errorResponse = exception['response'];
-    const statusCode = errorResponse
-      ? errorResponse['statusCode']
-      : HttpStatus.INTERNAL_SERVER_ERROR;
-
-    response.statusCode = statusCode;
-    response.json({
-      name,
-      message,
+    let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    if (
+      errorResponse &&
+      errorResponse['statusCode'] &&
+      typeof errorResponse['statusCode'] !== 'undefined'
+    ) {
+      statusCode = errorResponse['statusCode'];
+    }
+    if (typeof exception.getStatus === 'function') {
+      const exceptionStatusCode = exception.getStatus();
+      if (exceptionStatusCode) {
+        statusCode = exceptionStatusCode;
+      }
+    }
+    response.status(statusCode).json({
+      name: exception.name,
+      message: exception.message,
       success: false,
       code: statusCode,
       time: new Date().toISOString(),
+      url: request.path,
     });
   }
 }
